@@ -1,31 +1,49 @@
 <?php
-    $to = 'josueamilcar1013@gmail.com';
-    $name = $_POST["name"];
-    $email= $_POST["email"];
-    $text= $_POST["message"];
-    $subject= $_POST["subject"];
-    
 
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $headers = 'MIME-Version: 1.0' . "\r\n";
-    $headers .= "From: " . $email . "\r\n"; // envio al E-mail
-    $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-
-    $message ='<table style="width:100%">
-        <tr>
-            <td>'.$name.'  '.$subject.'</td>
-        </tr>
-        <tr><td>Email: '.$email.'</td></tr>
-        <tr><td>phone: '.$subject.'</td></tr>
-        <tr><td>Text: '.$text.'</td></tr>
+        #Reemplazar este correo por el correo electrónico del destinatario
+        $mail_to = "infoguatajiagua@gmail.com";
         
-    </table>';
+        # Envío de datos
+        $subject = trim($_POST["subject"]);
+        $name = str_replace(array("\r","\n"),array(" "," ") , strip_tags(trim($_POST["name"])));
+        $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
+        $phone = trim($_POST["phone"]);
+        $message = trim($_POST["message"]);
+        
+        if ( empty($name) OR !filter_var($email, FILTER_VALIDATE_EMAIL) OR empty($phone) OR empty($subject) OR empty($message)) {
+            # Establecer un código de respuesta y salida.
+            http_response_code(400);
+            echo "Por favor completa el formulario y vuelve a intentarlo.";
+            exit;
+        }
+        
+        # Contenido del correo
+        $content = "Nombres: $name\n";
+        $content .= "E-mail: $email\n\n";
+        $content .= "Telefono: $phone\n";
+        $content .= "Mensaje:\n$message\n";
 
-    if (@mail($to, $email, $message, $headers))
-    {
-        echo 'Su mensaje ha sido enviado satisfactoriamente .';
-    }else{
-        echo 'Error';
+        # Encabezados de correo electrónico.
+        $headers = "From: $name <$email>";
+
+        # Envía el correo.
+        $success = mail($mail_to, $subject, $content, $headers);
+        if ($success) {
+            # Establece un código de respuesta 200 (correcto).
+            http_response_code(200);
+            echo "¡Gracias! Tu mensaje ha sido enviado.";
+        } else {
+            # Establezce un código de respuesta 500 (error interno del servidor).
+            http_response_code(500);
+            echo "Oops! Algo salió mal, no pudimos enviar tu mensaje.";
+        }
+
+    } else {
+        # No es una solicitud POST, establezce un código de respuesta 403 (prohibido).
+        http_response_code(403);
+        echo "Hubo un problema con tu envío, intenta de nuevo.";
     }
 
 ?>
